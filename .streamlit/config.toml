@@ -1,0 +1,14 @@
+# Alpine look: white background, deep blue main color, ice-blue accents.
+[theme]
+base = "light"
+primaryColor = "#0B3C6F"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#EAF4FB"
+textColor = "#14213D"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
