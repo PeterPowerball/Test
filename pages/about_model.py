@@ -1,16 +1,15 @@
 """
-model.py: the "About our model" page. Data sources, target, inputs, walk-forward validation.
+about_model.py: the "About our model" page. Data sources, target, inputs, walk-forward validation.
 
 Owner:       Noah (Task 10 and 11) for the layout, Julian (Task 7) for the content and numbers
-Depends on:  data_access.get_validation_results(), ui_components.py, config.py
+Depends on:  data_access.get_validation_results(), ui.py, config.py
 Used by:     streamlit_app.py (navigation)
 Flow:        app. Important for grading: this page explains our own ML model.
 """
 
 import streamlit as st
 
-from snowproof import config, data_access
-from snowproof import ui_components as ui
+from snowproof import config, data_access, ui
 
 st.title("About our model")
 if config.USE_MOCK_DATA:
@@ -36,7 +35,7 @@ ui.todo_box("Data sources", "Noah + Nico", "Task 10 and 3",
 # ============================================================================ 3. inputs
 st.subheader("3. What the model knows in advance")
 ui.todo_box("Model inputs", "Julian", "Task 6",
-            "List the features from snowproof/ml/features.py (FEATURE_COLUMNS) and explain why the weather "
+            "List the features from snowproof/model.py (FEATURE_COLUMNS) and explain why the weather "
             "of the holiday week itself is NOT an input (data leakage).")
 
 # ============================================================================ 4. validation

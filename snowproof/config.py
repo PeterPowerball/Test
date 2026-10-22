@@ -20,9 +20,6 @@ from pathlib import Path
 # Fabio switches this to False during integration (Task 12), when steps 1 to 5 are done.
 USE_MOCK_DATA = True
 
-# The Future outlook page (Use Case 2) is optional. It only shows in the navigation when True.
-SHOW_FUTURE_PAGE = False
-
 # ============================================================================
 # The snow rule (our target variable)
 # ============================================================================
@@ -36,7 +33,7 @@ MAX_STAY_DAYS = 28                  # longest stay the snow check accepts
 # ============================================================================
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"                 # downloads and the database (gitignored)
-RAW_DIR = DATA_DIR / "raw"                   # cached raw downloads (see database.fetch_with_cache)
+RAW_DIR = DATA_DIR / "raw"                   # cached raw downloads (see data.fetch_with_cache)
 DB_PATH = DATA_DIR / "snowproof.sqlite"      # our SQLite database
 MODELS_DIR = ROOT_DIR / "models"
 MODEL_PATH = MODELS_DIR / "good_week_model.joblib"
@@ -76,7 +73,7 @@ USER_AGENT = "Snow-Proof student project (University of St. Gallen)"
 # Model and validation
 # ============================================================================
 RANDOM_SEED = 42      # so model results are the same on every run
-# The walk-forward rounds live in snowproof/ml/evaluate.py (WALK_FORWARD_ROUNDS).
+# The walk-forward rounds live in snowproof/model.py (WALK_FORWARD_ROUNDS).
 
 # ============================================================================
 # Map

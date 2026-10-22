@@ -1,8 +1,8 @@
 """
-test_labels.py: test cases for the 7-day rule (preparation.label_good_weeks).
+test_labels.py: test cases for the 7-day rule (data.label_good_weeks).
 
 Owner:       Nico + Julian (Task 4 and Task 6)
-Depends on:  snowproof/preparation.py
+Depends on:  snowproof/data.py
 Used by:     "pytest"
 Flow:        Step 3 of 5. Write these tests BEFORE (or while) you write label_good_weeks.
 
@@ -17,7 +17,7 @@ The rule: good_week = 1 if snow_depth_cm >= 50 on all 7 days,
 
 import pytest
 
-from snowproof import preparation  # noqa: F401  (used once the tests are written)
+from snowproof import data  # noqa: F401  (used once the tests are written)
 
 
 def test_seven_days_above_threshold_is_good_week():

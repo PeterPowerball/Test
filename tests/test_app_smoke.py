@@ -20,7 +20,7 @@ from streamlit.testing.v1 import AppTest  # noqa: E402
 
 from snowproof import config, data_access  # noqa: E402
 
-PAGES = ["pages/explore.py", "pages/model.py", "pages/about.py", "pages/future.py"]
+PAGES = ["pages/explore.py", "pages/about_model.py", "pages/about_us.py"]
 
 
 def test_entry_point_starts():

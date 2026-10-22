@@ -2,7 +2,7 @@
 explore.py: the main page. Sidebar filters, map, resort card, ranked list and the snow check.
 
 Owner:       Noah (Task 10 and 11), with Jan (Task 8 and 9) for filters and ranking
-Depends on:  data_access.py, filters.py, ui_components.py, config.py
+Depends on:  data_access.py, location.py, ui.py, config.py
 Used by:     streamlit_app.py (navigation)
 Flow:        app. The user flow from top to bottom:
              filters -> map -> click a resort -> resort card -> "Check the snow" -> snow check
@@ -24,8 +24,7 @@ from datetime import date
 
 import streamlit as st
 
-from snowproof import config, data_access, filters
-from snowproof import ui_components as ui
+from snowproof import config, data_access, location, ui
 
 # Skeleton preview: show EVERY section (with a sample resort and sample dates), even before the
 # map click and the button work, so everyone sees the whole flow. Noah sets this to False once
@@ -97,8 +96,8 @@ except NotImplementedError:
 
 # ============================================================================ apply the filters
 try:
-    matching = filters.filter_by_canton(resorts, active["cantons"])
-    matching = filters.filter_by_travel_time(matching, active["place"], active["max_minutes"])
+    matching = location.filter_by_canton(resorts, active["cantons"])
+    matching = location.filter_by_travel_time(matching, active["place"], active["max_minutes"])
     st.markdown(f"**{len(matching)} of {len(resorts)} resorts match**")
 except NotImplementedError:
     ui.todo_box("Filter logic", "Jan", "Task 8",
@@ -203,7 +202,7 @@ if selected and (view == "snow" or SKELETON_PREVIEW):
                 ui.todo_box("Good weeks per decade (optional)", "Noah + Julian", "Task 11 and 6",
                             "Long-term trend for this calendar week.")
             ui.todo_box("Similar resorts with better chances (optional)", "Jan + Noah", "Task 9",
-                        "Use ranking.find_similar_resorts and show 3 cards with a 'Check this resort' button.")
+                        "Use location.find_similar_resorts and show 3 cards with a 'Check this resort' button.")
 
         # 5. Model info
         try:

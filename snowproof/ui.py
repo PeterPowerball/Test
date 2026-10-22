@@ -1,9 +1,9 @@
 """
-ui_components.py: reusable UI pieces (sidebar, map, resort card, chance bar, charts) and todo_box.
+ui.py: reusable UI pieces (sidebar, map, resort card, chance bar, charts) and todo_box.
 
 Owner:       Noah (Task 10: user interface and navigation, Task 11: map, charts and resort details)
 Depends on:  config.py (colors), data_access.py (only through the pages)
-Used by:     pages/explore.py, pages/model.py, pages/future.py
+Used by:     pages/explore.py, pages/about_model.py
 Flow:        app
 
 Rule: these functions only DRAW. They get their data as arguments from the page,
@@ -67,7 +67,7 @@ def sidebar_filters(cantons: list[str], holiday_cantons: list[str]) -> dict:
     #         and one button per holiday period. The button sets the date input through
     #         st.session_state (use the button's on_click callback).
     # Step 3: Add st.date_input("Holiday dates", key="holiday_range") for a date range.
-    # Step 4: Check the dates with filters.validate_holiday_range and show st.sidebar.warning if needed.
+    # Step 4: Check the dates with location.validate_holiday_range and show st.sidebar.warning if needed.
     # Hint:   Give every widget a key=..., so its value survives reruns and can be set from callbacks.
     # Hint:   All filters are optional. With nothing filled in, return place="", cantons=[], dates=None.
     # Done when: the sidebar looks like the prototype and the returned dict changes when you use it.
@@ -184,14 +184,14 @@ def snow_check_dates(default: tuple[date, date]) -> tuple[date, date] | None:
 
     Owner:    Noah (Task 10: user interface and navigation)
     Used by:  pages/explore.py
-    Source:   pre-filled from the sidebar dates, or filters.default_trip_dates()
+    Source:   pre-filled from the sidebar dates, or location.default_trip_dates()
     Returns:  (start, end) if two valid dates are picked, otherwise None (with a friendly message)
     """
     # TODO [NOAH | Task 10] Snow check date input
     # Step 1: st.date_input("Holiday dates", key="check_range"), pre-filled with `default`.
     # Step 2: Make it a bit larger with a small CSS rule on .st-key-check_range (see the prototype).
     # Step 3: Only one date picked -> st.info("Please pick an end date too.") and return None.
-    # Step 4: Check with filters.validate_holiday_range; show st.warning and return None if invalid.
+    # Step 4: Check with location.validate_holiday_range; show st.warning and return None if invalid.
     # Done when: dates in July show "Snow-Proof covers the ski season from December to April".
     raise NotImplementedError("TODO [NOAH | Task 10]: snow_check_dates")
 
@@ -288,7 +288,7 @@ def walk_forward_timeline(results: pd.DataFrame) -> go.Figure:
     Training and test periods of each validation round as horizontal bars on a year axis.
 
     Owner:    Noah + Julian (Task 11 and Task 7)
-    Used by:  pages/model.py
+    Used by:  pages/about_model.py
     Source:   data_access.get_validation_results() (columns round, train_period, test_period)
     Returns:  a plotly Figure
     """
@@ -296,7 +296,7 @@ def walk_forward_timeline(results: pd.DataFrame) -> go.Figure:
     # Step 1: For each round, split "1950-1969" into start and end year.
     # Step 2: Add one horizontal bar for training and one for testing (orientation="h", base=start year).
     # Hint:   barmode="overlay" and yaxis autorange="reversed" put Round 1 on top.
-    # Done when: the timeline matches the rounds in ml/evaluate.py.
+    # Done when: the timeline matches the rounds in snowproof/model.py.
     raise NotImplementedError("TODO [NOAH+JULIAN | Task 11]: walk_forward_timeline")
 
 
@@ -305,7 +305,7 @@ def model_vs_baseline_chart(results: pd.DataFrame, model_col: str, baseline_col:
     Grouped bars: our model versus the historical baseline, per round.
 
     Owner:    Noah (Task 11: map, charts and resort details)
-    Used by:  pages/model.py
+    Used by:  pages/about_model.py
     Source:   data_access.get_validation_results()
     Returns:  a plotly Figure
     """

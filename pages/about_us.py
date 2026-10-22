@@ -1,5 +1,5 @@
 """
-about.py: the "About us" page. Who we are and why we built Snow-Proof.
+about_us.py: the "About us" page. Who we are and why we built Snow-Proof.
 
 Owner:       Noah (Task 10), text by everyone (please check your own role)
 Depends on:  nothing but Streamlit
