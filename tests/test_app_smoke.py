@@ -39,8 +39,8 @@ def test_entry_point_loads():
 def test_explore_page_empty_state():
     at = run_page("pages/explore.py")
     assert not at.exception
-    assert "Click a resort on the map" in texts(at)
-    assert not at.metric  # no resort panel yet, the map uses the full width
+    assert "Click your favorite ski destination" in texts(at)
+    assert not at.metric  # no details yet
     assert "24 of 24 resorts match" in texts(at)
 
 
@@ -48,18 +48,18 @@ def test_model_page_loads():
     assert not run_page("pages/model.py").exception
 
 
-def test_future_page_loads():
-    at = run_page("pages/future.py")
+def test_about_page_loads():
+    at = run_page("pages/about.py")
     assert not at.exception
-    assert "Coming later" in texts(at)
+    assert "University of St. Gallen" in texts(at)
 
 
 # ------------------------------------------------------------------- main user flows
 def test_selecting_a_resort_shows_the_panel():
     at = run_page("pages/explore.py", selected_resort_id="davos")
     assert not at.exception
-    assert "Davos" in texts(at) and "Davos Klosters" in "".join(s.value for s in at.subheader)
-    assert sorted(m.label for m in at.metric) == ["Base altitude", "Lifts", "Piste km", "Summit altitude"]
+    assert "Davos Klosters (GR)" in "".join(s.value for s in at.subheader)
+    assert sorted(m.label for m in at.metric) == ["Base", "Lifts", "Piste km", "Summit"]
     assert "Snow data from station **Davos**" in texts(at)
 
 

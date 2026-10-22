@@ -45,7 +45,7 @@ def app_header() -> None:
 
 
 # --------------------------------------------------------------------------- map
-def build_map(resorts: pd.DataFrame, chances: dict[str, float] | None, selected_id: str | None) -> folium.Map:
+def build_map(resorts: pd.DataFrame, chances: dict[str, float] | None) -> folium.Map:
     """Map with one circle per resort.
 
     Size = total piste km. Color = neutral blue, grey without station, or traffic light
@@ -69,12 +69,10 @@ def build_map(resorts: pd.DataFrame, chances: dict[str, float] | None, selected_
             color = config.chance_color(chances[r["resort_id"]])
         else:
             color = config.ACCENT_BLUE
-        is_selected = r["resort_id"] == selected_id
         folium.CircleMarker(
             location=[r["lat"], r["lon"]],
             radius=5 + r["total_piste_km"] ** 0.5 * 0.7,
-            color=config.TEXT_DARK if is_selected else "white",
-            weight=4 if is_selected else 1.5,
+            color="white", weight=1.5,
             fill=True, fill_color=color, fill_opacity=0.85,
             tooltip=r["name"],
         ).add_to(fmap)
@@ -116,8 +114,11 @@ def piste_bar(pistes: pd.DataFrame) -> go.Figure:
                     marker_color=config.PISTE_COLORS[row["difficulty"]],
                     text=[f"{row['km']:.0f} km"], textposition="inside",
                     textfont=dict(color="white"))
-    fig.update_layout(barmode="stack", yaxis=dict(visible=False), xaxis_title="km")
-    return _style(fig, height=170)
+    fig = _style(fig, height=150)
+    fig.update_layout(barmode="stack", yaxis=dict(visible=False), xaxis=dict(visible=False),
+                      title="Piste km by difficulty", margin=dict(t=40, b=0),
+                      legend=dict(orientation="h", y=-0.15, traceorder="normal"))
+    return fig
 
 
 def station_box(station: dict | None) -> None:
@@ -221,16 +222,3 @@ def model_vs_baseline_chart(results: pd.DataFrame, model_col: str, baseline_col:
                 marker_color=config.GREY)
     fig.update_layout(barmode="group", title=title)
     return _style(fig)
-
-
-def future_range_chart(outlook: pd.DataFrame) -> go.Figure:
-    """Range band of good ski weeks per season, per decade (illustration)."""
-    fig = go.Figure()
-    fig.add_scatter(x=outlook["decade"], y=outlook["high_weeks"], mode="lines", line=dict(width=0),
-                    showlegend=False, hoverinfo="skip")
-    fig.add_scatter(x=outlook["decade"], y=outlook["low_weeks"], mode="lines", line=dict(width=0),
-                    fill="tonexty", fillcolor="rgba(46,134,193,0.25)", name="Range across climate models")
-    fig.add_scatter(x=outlook["decade"], y=outlook["median_weeks"], mode="lines+markers",
-                    line=dict(color=config.BRAND_BLUE, width=3), name="Median")
-    fig.update_layout(title="Good ski weeks per season (illustration)", yaxis_title="weeks")
-    return _style(fig, height=360)

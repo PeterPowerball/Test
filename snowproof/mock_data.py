@@ -216,25 +216,6 @@ def daily_forecast(row, days: list[date]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def future_outlook(row) -> pd.DataFrame:
-    """Good ski weeks per season for the 2020s to 2040s under three warming paths."""
-    factor = resort_factor(row["resort_id"])
-    alt = snow_altitude(row)
-    season_starts = [date(2022, 12, 1) + timedelta(days=7 * i) for i in range(21)]  # Dec to Apr
-    paths = {"high": 1.2, "median": 2.5, "low": 4.0}  # meters of "lost altitude" per year
-    result = []
-    for decade in (2020, 2030, 2040):
-        entry = {"decade": f"{decade}s"}
-        for label, loss_per_year in paths.items():
-            shift = -(decade + 5 - 2025) * loss_per_year
-            total = 0.0
-            for s in season_starts:
-                total += week_chance(alt, [s + timedelta(days=i) for i in range(7)], factor, shift)
-            entry[label] = round(total, 1)
-        result.append(entry)
-    return pd.DataFrame(result).rename(columns={"low": "low_weeks", "median": "median_weeks", "high": "high_weeks"})
-
-
 def validation_table() -> pd.DataFrame:
     """Hard-coded, plausible walk-forward results (accuracy: higher is better, Brier: lower is better)."""
     rows = [

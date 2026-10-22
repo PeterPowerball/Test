@@ -1,4 +1,4 @@
-"""Page 2: a short, visual explanation of how the prediction model works."""
+"""Page 2: About our model. A short, visual explanation of how the prediction works."""
 
 import streamlit as st
 
@@ -6,7 +6,7 @@ from snowproof import config, data_access
 from snowproof import ui_components as ui
 
 ui.app_header()
-st.header("How the model works")
+st.header("About our model")
 st.caption("The validation numbers below are mock data until our model is trained.")
 
 st.subheader("1. What we predict")

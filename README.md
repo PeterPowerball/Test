@@ -34,7 +34,7 @@ Private repositories work too, once you have authorized Streamlit to access them
 
 ```
 streamlit_app.py        entry point: page config and navigation
-pages/                  explore.py (main page), model.py, future.py
+pages/                  explore.py (main page), model.py (About our model), about.py (About us)
 snowproof/
     data_access.py      the ONLY place the UI gets data from
     mock_data.py        mock resorts, stations, predictions (to be replaced)
@@ -53,7 +53,7 @@ the returned columns the same. Each docstring describes the exact format.
 | `get_resorts`, `get_resort_details`, `get_pistes` | OpenStreetMap Overpass API (resorts, pistes, lifts), swisstopo / api3.geo.admin.ch (altitudes) | Data and database (Nico) |
 | `get_linked_station` | MeteoSwiss Open Data | Data and database (Nico) |
 | `get_historical_good_week_share` | MeteoSwiss Open Data (measured snow depth) | Data and database (Nico) |
-| `predict_good_week`, `get_model_info`, `get_future_outlook` | Our own trained ML model (plus Open-Meteo Historical / ERA5 features) | ML model (Julian, Jan) |
+| `predict_good_week`, `get_model_info` | Our own trained ML model (plus Open-Meteo Historical / ERA5 features) | ML model (Julian, Jan) |
 | `get_validation_results` | Our own ML model (validation script output) | ML model (Julian, Jan) |
 | `get_travel_time_minutes` | swisstopo geocoding and transport.opendata.ch | Filters and ranking (Jan) |
 | `get_school_holidays`, `get_school_holiday_cantons` | OpenHolidays API | Filters and ranking (Jan) |
@@ -64,6 +64,6 @@ the returned columns the same. Each docstring describes the exact format.
 ## Known limitations
 
 - All numbers are mock data and deterministic (seeded by resort id).
-- Travel times are only mocked for a few Swiss cities (Zurich, Bern, Basel, Geneva, Lausanne, St. Gallen, Lucerne, Lugano, Chur, Winterthur, Sion).
+- Travel times (from the city / village in the sidebar) are only mocked for a few Swiss cities (Zurich, Bern, Basel, Geneva, Lausanne, St. Gallen, Lucerne, Lugano, Chur, Winterthur, Sion).
 - School holiday dates are placeholders.
 - The map needs internet access for the swisstopo tiles. A CartoDB layer can be switched on in the layer control.

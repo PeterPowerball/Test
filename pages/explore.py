@@ -34,7 +34,7 @@ def select_resort(resort_id: str) -> None:
 
 
 def close_resort() -> None:
-    """Deselect the resort, so the map takes the full width again."""
+    """Deselect the resort and hide the details below the map."""
     st.session_state.selected_resort_id = None
     st.session_state.last_map_click = None
     st.session_state.map_version += 1
@@ -71,8 +71,9 @@ def render_sidebar() -> dict:
     with st.sidebar:
         st.header("Filters")
         st.caption("All optional. You can use the map without them.")
-        home = st.text_input("Home address", key="home_address", placeholder="e.g. Zurich",
-                             help="Prototype: only major Swiss cities are recognised.")
+        home = st.text_input("City / village", key="home_address", placeholder="e.g. Zurich",
+                             help="Where you start your trip. No street address needed. "
+                                  "Prototype: only major Swiss cities are recognised.")
         cantons = st.multiselect("Canton", data_access.get_cantons(), key="cantons")
         max_hours = st.slider("Max. travel time by public transport (hours)", 1.0,
                               config.MAX_TRAVEL_HOURS, config.MAX_TRAVEL_HOURS, 0.5, key="max_hours",
@@ -107,7 +108,7 @@ def filter_resorts(resorts, filters: dict):
             keep = keep[[times[rid] is not None and times[rid] <= filters["max_minutes"]
                          for rid in keep["resort_id"]]]
         else:
-            st.sidebar.warning("Address not recognised. Try a Swiss city such as Zurich or Bern.")
+            st.sidebar.warning("City / village not recognised. Try a Swiss city such as Zurich or Bern.")
     return keep
 
 
@@ -141,41 +142,46 @@ def render_ranking(matching, filters: dict) -> None:
 
 
 def render_resort_panel(filters: dict) -> None:
+    """Details of the selected resort, shown below the map in two columns."""
     rid = st.session_state.selected_resort_id
     details = data_access.get_resort_details(rid)
     station = data_access.get_linked_station(rid)
 
-    title_col, close_col = st.columns([4, 1], vertical_alignment="center")
-    title_col.subheader(details["name"])
-    close_col.button("Close", on_click=close_resort, help="Back to the full map")
-    st.caption(f"Canton {details['canton']}")
-    st.write(details["description"])
+    with st.container(border=True):
+        title_col, close_col = st.columns([5, 1], vertical_alignment="center")
+        title_col.subheader(f"{details['name']} ({details['canton']})")
+        close_col.button("Close", on_click=close_resort, width="stretch")
 
-    c1, c2 = st.columns(2)
-    c1.metric("Piste km", f"{details['total_piste_km']:.0f}")
-    c2.metric("Lifts", f"{details['lifts']}")
-    c1.metric("Base altitude", f"{details['base_altitude_m']:,} m")
-    c2.metric("Summit altitude", f"{details['summit_altitude_m']:,} m")
+        left, right = st.columns(2, gap="large")
+        with left:
+            st.write(details["description"])
+            m1, m2 = st.columns(2)
+            m1.metric("Piste km", f"{details['total_piste_km']:.0f}")
+            m2.metric("Lifts", f"{details['lifts']}")
+            m1.metric("Base", f"{details['base_altitude_m']:,} m")
+            m2.metric("Summit", f"{details['summit_altitude_m']:,} m")
+            if filters["home"]:
+                minutes = data_access.get_travel_time_minutes(filters["home"], rid)
+                if minutes is None:
+                    st.caption("Travel time: city / village not recognised.")
+                else:
+                    st.markdown(f"**Travel time from {filters['home']}:** about "
+                                f"{ui.format_minutes(minutes)} by public transport")
+        with right:
+            ui.show_chart(ui.piste_bar(data_access.get_pistes(rid)))
+            ui.station_box(station)
 
-    ui.show_chart(ui.piste_bar(data_access.get_pistes(rid)))
-    ui.station_box(station)
-
-    if filters["home"]:
-        minutes = data_access.get_travel_time_minutes(filters["home"], rid)
-        if minutes is None:
-            st.caption("Travel time: address not recognised.")
-        else:
-            st.markdown(f"**Travel time from {filters['home']}:** about {ui.format_minutes(minutes)} by public transport")
-
-    st.button("Check the snow for your holiday", type="primary", disabled=station is None,
-              on_click=open_snow_check, args=(filters["dates"],), width="stretch")
-    if station is None:
-        st.caption("Not available: this resort has no reliable measurement station nearby.")
+        st.button("Check the snow for your holiday", type="primary", disabled=station is None,
+                  on_click=open_snow_check, args=(filters["dates"],), width="stretch")
+        if station is None:
+            st.caption("Not available: this resort has no reliable measurement station nearby.")
 
 
 def render_explore(filters: dict) -> None:
     resorts = data_access.get_resorts()
     matching = filter_resorts(resorts, filters)
+    st.info("Click your favorite ski destination on the map to see its slopes and check the snow "
+            "for your holiday. Use the filters on the left to narrow down the list.", icon="👆")
     st.markdown(f"**{len(matching)} of {len(resorts)} resorts match**")
 
     chances = None
@@ -184,29 +190,18 @@ def render_explore(filters: dict) -> None:
         ranked = data_access.get_ranked_resorts(tuple(matching["resort_id"]), start, end, filters["home"])
         chances = dict(zip(ranked["resort_id"], ranked["chance"]))
 
-    # Before a click the map uses the full width. After a click it shrinks to make room
-    # for the resort panel. The click is handled first, so the layout switches right away.
-    selected_before = st.session_state.selected_resort_id
-    if selected_before is None:
-        map_col, panel_col = st.container(), None
-    else:
-        map_col, panel_col = st.columns([3, 2], gap="large")
-    with map_col:
-        fmap = ui.build_map(matching, chances, selected_before)
-        st.session_state["_clicked_name"] = ui.show_map(fmap, key=f"map_{st.session_state.map_version}")
-        handle_map_click(resorts)
-        if st.session_state.selected_resort_id != selected_before:
-            st.rerun()  # redraw with the new layout
-        ui.map_legend(chances is not None)
-        if matching.empty:
-            st.info("No resort matches your filters. Try a larger travel time or another canton.")
-        if selected_before is None:
-            st.caption("Click a resort on the map to see its slopes and snow outlook.")
-        if filters["dates"]:
-            render_ranking(matching, filters)
-    if panel_col is not None:
-        with panel_col:
-            render_resort_panel(filters)
+    # The map always uses the full width, the details appear below it
+    fmap = ui.build_map(matching, chances)
+    st.session_state["_clicked_name"] = ui.show_map(fmap, key=f"map_{st.session_state.map_version}")
+    handle_map_click(resorts)
+    ui.map_legend(chances is not None)
+    if matching.empty:
+        st.info("No resort matches your filters. Try a larger travel time or another canton.")
+
+    if st.session_state.selected_resort_id is not None:
+        render_resort_panel(filters)
+    if filters["dates"]:
+        render_ranking(matching, filters)
 
 
 # --------------------------------------------------------------------- snow check

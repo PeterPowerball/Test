@@ -236,15 +236,3 @@ def get_ranked_resorts(resort_ids: tuple[str, ...], start_date: date, end_date: 
     columns = ["resort_id", "name", "canton", "chance", "baseline", "travel_minutes"]
     table = pd.DataFrame(rows, columns=columns)
     return table.sort_values("chance", ascending=False).reset_index(drop=True)
-
-
-@st.cache_data
-def get_future_outlook(resort_id: str) -> pd.DataFrame:
-    """Illustrative number of good ski weeks per season, per decade, across climate paths.
-
-    Columns: decade ("2020s", "2030s", "2040s"), low_weeks, median_weeks, high_weeks.
-
-    FUTURE SOURCE: our own ML model applied to several climate model projections
-    (e.g. CH2018 / CMIP6 scenarios). Not part of the first release.
-    """
-    return mock_data.future_outlook(_resort_row(resort_id))
