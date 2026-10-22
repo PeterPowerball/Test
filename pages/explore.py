@@ -27,8 +27,16 @@ def init_state() -> None:
 
 
 def select_resort(resort_id: str) -> None:
-    """Select a resort from outside the map (list or alternatives)."""
+    """Select a resort from outside the map (the ranked list)."""
     st.session_state.selected_resort_id = resort_id
+    st.session_state.last_map_click = None  # the new map widget starts without a click
+    st.session_state.map_version += 1
+
+
+def close_resort() -> None:
+    """Deselect the resort, so the map takes the full width again."""
+    st.session_state.selected_resort_id = None
+    st.session_state.last_map_click = None
     st.session_state.map_version += 1
 
 
@@ -134,13 +142,12 @@ def render_ranking(matching, filters: dict) -> None:
 
 def render_resort_panel(filters: dict) -> None:
     rid = st.session_state.selected_resort_id
-    if rid is None:
-        st.info("Click a resort on the map to see its slopes and snow outlook.")
-        return
     details = data_access.get_resort_details(rid)
     station = data_access.get_linked_station(rid)
 
-    st.subheader(details["name"])
+    title_col, close_col = st.columns([4, 1], vertical_alignment="center")
+    title_col.subheader(details["name"])
+    close_col.button("Close", on_click=close_resort, help="Back to the full map")
     st.caption(f"Canton {details['canton']}")
     st.write(details["description"])
 
@@ -177,18 +184,29 @@ def render_explore(filters: dict) -> None:
         ranked = data_access.get_ranked_resorts(tuple(matching["resort_id"]), start, end, filters["home"])
         chances = dict(zip(ranked["resort_id"], ranked["chance"]))
 
-    map_col, panel_col = st.columns([3, 2], gap="large")
+    # Before a click the map uses the full width. After a click it shrinks to make room
+    # for the resort panel. The click is handled first, so the layout switches right away.
+    selected_before = st.session_state.selected_resort_id
+    if selected_before is None:
+        map_col, panel_col = st.container(), None
+    else:
+        map_col, panel_col = st.columns([3, 2], gap="large")
     with map_col:
-        fmap = ui.build_map(matching, chances, st.session_state.selected_resort_id)
+        fmap = ui.build_map(matching, chances, selected_before)
         st.session_state["_clicked_name"] = ui.show_map(fmap, key=f"map_{st.session_state.map_version}")
         handle_map_click(resorts)
+        if st.session_state.selected_resort_id != selected_before:
+            st.rerun()  # redraw with the new layout
         ui.map_legend(chances is not None)
         if matching.empty:
             st.info("No resort matches your filters. Try a larger travel time or another canton.")
+        if selected_before is None:
+            st.caption("Click a resort on the map to see its slopes and snow outlook.")
         if filters["dates"]:
             render_ranking(matching, filters)
-    with panel_col:
-        render_resort_panel(filters)
+    if panel_col is not None:
+        with panel_col:
+            render_resort_panel(filters)
 
 
 # --------------------------------------------------------------------- snow check
@@ -204,32 +222,20 @@ def snow_verdict(chance: float, baseline: float) -> str:
     return f"Snow is unlikely to be good for these dates, {comparison}."
 
 
-def render_alternatives(rid: str, start: date, end: date, home: str) -> None:
-    st.subheader("Similar resorts with better chances")
-    alternatives = data_access.get_alternatives(rid, start, end, home)
-    if alternatives.empty:
-        st.success("No similar resort has clearly better odds. This is a strong pick.")
-        return
-    cols = st.columns(len(alternatives))
-    for col, (_, r) in zip(cols, alternatives.iterrows()):
-        with col.container(border=True):
-            st.markdown(f"**{r['name']}** ({r['canton']})")
-            st.markdown(f"<b style='color:{config.chance_color(r['chance'])}'>{r['chance']:.0%}</b> chance of a good week",
-                        unsafe_allow_html=True)
-            if r["travel_minutes"] is not None:
-                st.caption(f"About {ui.format_minutes(r['travel_minutes'])} away")
-            st.button("Check this resort", key=f"alt_{r['resort_id']}", on_click=select_resort,
-                      args=(r["resort_id"],))
-
-
 def render_snow_check(filters: dict) -> None:
     rid = st.session_state.selected_resort_id
     details = data_access.get_resort_details(rid)
     st.button("Back to resort", on_click=back_to_resort)
     st.header(f"Snow check: {details['name']}")
 
+    # Slightly larger date picker: it is the main input of this view
+    st.markdown(
+        "<style>.st-key-check_range label p {font-size:1.15rem;font-weight:600}"
+        ".st-key-check_range input {font-size:1.1rem;min-height:2.8rem}</style>",
+        unsafe_allow_html=True,
+    )
     st.session_state.setdefault("check_range", config.default_trip_dates())
-    st.date_input("Holiday dates", key="check_range", format="DD.MM.YYYY")
+    st.date_input("Holiday dates", key="check_range", format="DD.MM.YYYY", width=360)
     value = st.session_state.check_range
     if not isinstance(value, (tuple, list)) or len(value) != 2:
         st.info("Please pick an end date too.")
@@ -245,28 +251,18 @@ def render_snow_check(filters: dict) -> None:
         st.warning(result["reason"])
         return
 
-    left, right = st.columns(2, gap="large")
-    with left:
-        st.markdown(f"### {result['chance']:.0%} chance of a good ski week")
-        ui.show_chart(ui.chance_gauge(result["chance"]))
-        st.write(snow_verdict(result["chance"], result["baseline"]))
-    with right:
-        st.info(f"A good ski week means at least {config.GOOD_SNOW_CM} cm of snow depth on all "
-                f"{config.GOOD_WEEK_DAYS} days at the linked station.")
-        st.metric("Historical average for this week", f"{result['baseline']:.0%}",
-                  delta=f"{(result['chance'] - result['baseline']) * 100:+.0f} points (model vs history)")
-        if len(result["weekly"]) > 1:
+    # Chance and historical average together in one bar
+    ui.chance_bar(result["chance"], result["baseline"], snow_verdict(result["chance"], result["baseline"]))
+
+    # The expected snow depth is what the chance is derived from
+    if len(result["weekly"]) > 1:
+        c1, c2 = st.columns([3, 2], gap="large")
+        with c1:
+            ui.show_chart(ui.daily_snow_chart(result["daily"]))
+        with c2:
             ui.show_chart(ui.weekly_chart(result["weekly"]))
-
-    calendar_week = start.isocalendar().week
-    c1, c2 = st.columns(2, gap="large")
-    with c1:
+    else:
         ui.show_chart(ui.daily_snow_chart(result["daily"]))
-    with c2:
-        history = data_access.get_historical_good_week_share(rid, calendar_week)
-        ui.show_chart(ui.history_chart(history, calendar_week))
-
-    render_alternatives(rid, start, end, filters["home"])
 
     info = data_access.get_model_info(rid)
     with st.expander("About this forecast"):

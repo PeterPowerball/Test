@@ -40,6 +40,7 @@ def test_explore_page_empty_state():
     at = run_page("pages/explore.py")
     assert not at.exception
     assert "Click a resort on the map" in texts(at)
+    assert not at.metric  # no resort panel yet, the map uses the full width
     assert "24 of 24 resorts match" in texts(at)
 
 
@@ -68,14 +69,22 @@ def test_opening_the_snow_check():
     assert not at.exception
     assert "chance of a good ski week" in texts(at)
     assert "at least 50 cm" in texts(at)
-    assert "Historical average for this week" in [m.label for m in at.metric]
+    assert "Historical average for this week" in texts(at)
 
 
-def test_snow_check_with_several_weeks_and_alternatives():
+def test_snow_check_with_several_weeks():
     at = run_page("pages/explore.py", selected_resort_id="soerenberg", view="snow",
                   check_range=(date(2027, 2, 6), date(2027, 2, 25)))
     assert not at.exception
-    assert "Similar resorts with better chances" in "".join(s.value for s in at.subheader)
+    assert "chance of a good ski week" in texts(at)
+
+
+def test_closing_the_resort_panel():
+    at = run_page("pages/explore.py", selected_resort_id="davos")
+    [b for b in at.button if b.label == "Close"][0].click().run()
+    assert not at.exception
+    assert at.session_state["selected_resort_id"] is None
+    assert not at.metric
 
 
 def test_resort_without_station_disables_the_button():

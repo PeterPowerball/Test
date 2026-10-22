@@ -57,7 +57,7 @@ the returned columns the same. Each docstring describes the exact format.
 | `get_validation_results` | Our own ML model (validation script output) | ML model (Julian, Jan) |
 | `get_travel_time_minutes` | swisstopo geocoding and transport.opendata.ch | Filters and ranking (Jan) |
 | `get_school_holidays`, `get_school_holiday_cantons` | OpenHolidays API | Filters and ranking (Jan) |
-| `get_ranked_resorts`, `get_alternatives`, `get_cantons` | Built on the functions above | Filters and ranking (Jan) |
+| `get_ranked_resorts`, `get_cantons` | Built on the functions above | Filters and ranking (Jan) |
 | Pages and `ui_components.py` | n/a | UI, map and charts (Noah) |
 | `streamlit_app.py`, tests, deployment | n/a | Integration (Fabio) |
 

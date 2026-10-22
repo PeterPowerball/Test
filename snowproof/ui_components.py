@@ -130,20 +130,43 @@ def station_box(station: dict | None) -> None:
 
 
 # --------------------------------------------------------------------- snow check
-def chance_gauge(chance: float) -> go.Figure:
-    """Big gauge with traffic light colors."""
+def chance_bar(chance: float, baseline: float, verdict: str) -> None:
+    """One card with the chance as a 0 to 100% bar and the historical average as a marker.
+
+    Plain HTML instead of a chart: it is just one bar, and this way it scales nicely on phones.
+    """
     color = config.chance_color(chance)
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number", value=round(chance * 100),
-        number=dict(suffix="%", font=dict(size=54, color=color)),
-        gauge=dict(
-            axis=dict(range=[0, 100]), bar=dict(color=color, thickness=0.35),
-            steps=[dict(range=[0, config.OK_CHANCE_MIN * 100], color="#F7DADA"),
-                   dict(range=[config.OK_CHANCE_MIN * 100, config.GOOD_CHANCE_MIN * 100], color="#FCEFC6"),
-                   dict(range=[config.GOOD_CHANCE_MIN * 100, 100], color="#D5EEDD")],
-        ),
-    ))
-    return _style(fig, height=260)
+    pct, base_pct = round(chance * 100), round(baseline * 100)
+    st.markdown(
+        f"""
+        <div style="border:1px solid {config.ICE_BLUE};border-radius:12px;padding:20px 24px;margin:8px 0 16px">
+          <div style="font-size:2rem;font-weight:700;color:{color}">{pct}%
+            <span style="font-size:1.2rem;font-weight:600;color:{config.TEXT_DARK}">chance of a good ski week</span>
+          </div>
+          <div style="position:relative;height:28px;background:#EEF2F6;border-radius:14px;margin:18px 0 6px">
+            <div style="width:{pct}%;height:100%;background:{color};border-radius:14px"></div>
+            <div title="Historical average" style="position:absolute;left:{base_pct}%;top:-6px;bottom:-6px;
+                 width:3px;background:{config.BRAND_BLUE};transform:translateX(-50%)"></div>
+          </div>
+          <div style="position:relative;height:20px;font-size:0.8rem;color:#5B6675">
+            <span style="position:absolute;left:0">0%</span>
+            <span style="position:absolute;left:50%;transform:translateX(-50%)">50%</span>
+            <span style="position:absolute;right:0">100%</span>
+          </div>
+          <div style="margin-top:10px">
+            <span style="display:inline-block;width:3px;height:14px;background:{config.BRAND_BLUE};
+                  vertical-align:middle;margin-right:6px"></span>
+            Historical average for this week: <b>{base_pct}%</b>
+          </div>
+          <div style="margin-top:6px">{verdict}</div>
+          <div style="margin-top:10px;font-size:0.85rem;color:#5B6675">
+            A good ski week means at least {config.GOOD_SNOW_CM} cm of snow depth on all
+            {config.GOOD_WEEK_DAYS} days at the linked station.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def weekly_chart(weekly: pd.DataFrame) -> go.Figure:
@@ -170,16 +193,6 @@ def daily_snow_chart(daily: pd.DataFrame) -> go.Figure:
     fig.add_hline(y=config.GOOD_SNOW_CM, line_dash="dash", line_color=config.RED,
                   annotation_text=f"{config.GOOD_SNOW_CM} cm threshold", annotation_position="top left")
     fig.update_layout(title="Expected snow depth per day", yaxis_title="cm")
-    return _style(fig)
-
-
-def history_chart(history: pd.DataFrame, calendar_week: int) -> go.Figure:
-    """Share of good weeks per decade for this calendar week."""
-    fig = go.Figure(go.Bar(x=history["decade"], y=history["share"] * 100,
-                           marker_color=config.BRAND_BLUE,
-                           text=[f"{s:.0%}" for s in history["share"]], textposition="outside"))
-    fig.update_layout(title=f"Good weeks per decade (calendar week {calendar_week})",
-                      yaxis=dict(title="% of years", range=[0, 110]))
     return _style(fig)
 
 

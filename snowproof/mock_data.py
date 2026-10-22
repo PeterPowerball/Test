@@ -135,10 +135,6 @@ def _distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 6371 * 2 * math.asin(math.sqrt(a))
 
 
-def distance_between(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    return _distance_km(lat1, lon1, lat2, lon2)
-
-
 def travel_minutes(home_address: str, lat: float, lon: float) -> int | None:
     """Mock: find a known city in the address and turn the distance into minutes."""
     text = (home_address or "").lower()

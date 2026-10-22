@@ -239,39 +239,6 @@ def get_ranked_resorts(resort_ids: tuple[str, ...], start_date: date, end_date: 
 
 
 @st.cache_data
-def get_alternatives(resort_id: str, start_date: date, end_date: date,
-                     home_address: str = "", count: int = 3) -> pd.DataFrame:
-    """Other resorts with a better chance and a similar travel time (or similar location).
-
-    Similar means: within 60 minutes of the travel time to this resort if a home address is
-    known, otherwise within 150 km of this resort. Same columns as get_ranked_resorts().
-
-    FUTURE SOURCE: predictions from our own ML model, travel time from transport.opendata.ch.
-    """
-    resorts = get_resorts()
-    current = predict_good_week(resort_id, start_date, end_date)
-    if not current["available"]:
-        return pd.DataFrame(columns=["resort_id", "name", "canton", "chance", "baseline", "travel_minutes"])
-    me = _resort_row(resort_id)
-    my_time = get_travel_time_minutes(home_address, resort_id)
-
-    others = tuple(r for r in resorts["resort_id"] if r != resort_id)
-    ranked = get_ranked_resorts(others, start_date, end_date, home_address)
-    ranked = ranked[ranked["chance"] > current["chance"] + 0.02]
-
-    keep = []
-    for _, r in ranked.iterrows():
-        if my_time is not None and r["travel_minutes"] is not None:
-            close = abs(r["travel_minutes"] - my_time) <= 60
-        else:
-            other = _resort_row(r["resort_id"])
-            close = mock_data.distance_between(me["lat"], me["lon"], other["lat"], other["lon"]) <= 150
-        keep.append(close)
-    mask = pd.Series(keep, index=ranked.index, dtype=bool)
-    return ranked[mask].head(count).reset_index(drop=True)
-
-
-@st.cache_data
 def get_future_outlook(resort_id: str) -> pd.DataFrame:
     """Illustrative number of good ski weeks per season, per decade, across climate paths.
 
