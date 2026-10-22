@@ -4,7 +4,6 @@ Fill this in during the project, not at the end. One row per piece of work. Link
 
 | Date | Person | Task | What I did | Files | Pull request |
 |---|---|---|---|---|---|
-| 22.10.2026 | Claude Code (AI) | 2 | Generated the code skeleton (see GENAI_LOG.md) | all | |
 | | | | | | |
 
 ## Summary per person
