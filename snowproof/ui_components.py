@@ -1,8 +1,18 @@
-"""Reusable UI pieces: header, map, gauge and charts.
-
-Pages call these functions and pass in data they got from data_access.py.
-Nothing in here fetches data on its own.
 """
+ui_components.py: reusable UI pieces (sidebar, map, resort card, chance bar, charts) and todo_box.
+
+Owner:       Noah (Task 10: user interface and navigation, Task 11: map, charts and resort details)
+Depends on:  config.py (colors), data_access.py (only through the pages)
+Used by:     pages/explore.py, pages/model.py, pages/future.py
+Flow:        app
+
+Rule: these functions only DRAW. They get their data as arguments from the page,
+which got it from data_access.py. They never call an API or the database themselves.
+
+Look at the ui-prototype branch for how each piece should look in the end.
+"""
+
+from datetime import date
 
 import folium
 import pandas as pd
@@ -13,212 +23,294 @@ from streamlit_folium import st_folium
 from snowproof import config
 
 
-# ----------------------------------------------------------------- small helpers
-def format_minutes(minutes: int) -> str:
-    """135 -> '2 h 15 min'."""
-    hours, mins = divmod(int(minutes), 60)
-    return f"{hours} h {mins:02d} min" if hours else f"{mins} min"
-
-
-def _style(fig: go.Figure, height: int = 320) -> go.Figure:
-    """Same look for every chart."""
-    fig.update_layout(
-        template="plotly_white", height=height, margin=dict(l=10, r=10, t=40, b=10),
-        font=dict(color=config.TEXT_DARK), legend=dict(orientation="h", y=-0.2),
-    )
-    return fig
-
-
-def show_chart(fig: go.Figure) -> None:
-    st.plotly_chart(fig, width="stretch")
-
-
-# ------------------------------------------------------------------------ header
-def app_header() -> None:
-    """Title, tagline and the prototype banner."""
-    st.markdown(
-        f"<h1 style='color:{config.BRAND_BLUE};margin-bottom:0'>🏔️ Snow-Proof</h1>",
-        unsafe_allow_html=True,
-    )
-    st.markdown("##### Where will the snow be good for your ski holiday?")
-    st.caption("Prototype: all numbers are mock data.")
-
-
-# --------------------------------------------------------------------------- map
-def build_map(resorts: pd.DataFrame, chances: dict[str, float] | None) -> folium.Map:
-    """Map with one circle per resort.
-
-    Size = total piste km. Color = neutral blue, grey without station, or traffic light
-    if `chances` (resort_id -> chance) is given.
+# ============================================================================ todo_box
+def todo_box(title: str, owner: str, task: str, description: str, preview=None) -> None:
     """
-    fmap = folium.Map(location=config.MAP_CENTER, zoom_start=config.MAP_ZOOM, tiles=None,
-                      control_scale=True, zoom_control=True)
-    folium.TileLayer(tiles=config.SWISSTOPO_TILES, attr=config.SWISSTOPO_ATTRIBUTION,
-                     name="swisstopo map", max_zoom=18).add_to(fmap)
-    # Fallback base map, can be switched on in the layer control
-    folium.TileLayer(
-        tiles="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-        attr="© OpenStreetMap contributors © CARTO", name="CartoDB positron (fallback)", show=False,
-    ).add_to(fmap)
-    folium.LayerControl(collapsed=True).add_to(fmap)
+    Show a visible "Under construction" box in the app instead of a section that is not built yet.
 
-    for _, r in resorts.iterrows():
-        if not r["has_station"]:
-            color = config.GREY
-        elif chances is not None and r["resort_id"] in chances:
-            color = config.chance_color(chances[r["resort_id"]])
-        else:
-            color = config.ACCENT_BLUE
-        folium.CircleMarker(
-            location=[r["lat"], r["lon"]],
-            radius=5 + r["total_piste_km"] ** 0.5 * 0.7,
-            color="white", weight=1.5,
-            fill=True, fill_color=color, fill_opacity=0.85,
-            tooltip=r["name"],
-        ).add_to(fmap)
-    return fmap
+    Owner:    Fabio (Task 2), already done. Do not change it, just call it.
+    Used by:  every page, in the "except NotImplementedError" part of each section
+    Returns:  nothing
+
+    preview:  optional mock data (DataFrame, dict or list) shown in an expander, so the owner
+              sees which data the section will get.
+    """
+    with st.container(border=True):
+        st.markdown(f"#### 🚧 Under construction: {title}")
+        st.markdown(f"**Owner:** {owner} &nbsp;·&nbsp; **Task:** {task}")
+        st.caption(description)
+        if preview is not None:
+            with st.expander("Mock data this section will use"):
+                if isinstance(preview, pd.DataFrame):
+                    st.dataframe(preview, hide_index=True)
+                else:
+                    st.write(preview)
+
+
+# ============================================================================ sidebar
+def sidebar_filters(cantons: list[str], holiday_cantons: list[str]) -> dict:
+    """
+    Draw the optional filters in the sidebar and return what the user chose.
+
+    Owner:    Noah + Jan (Task 10 and Task 8)
+    Used by:  pages/explore.py
+    Source:   data_access.get_cantons(), data_access.get_school_holiday_cantons(), get_school_holidays()
+    Returns:  dict with keys
+                place (str, the city / village, "" if empty), cantons (list[str]),
+                max_minutes (float), dates (tuple[date, date] or None if not set or not valid)
+    """
+    # TODO [NOAH+JAN | Task 10] Sidebar filters
+    # Step 1: Inside "with st.sidebar:", add st.text_input("City / village") (no street address, privacy),
+    #         st.multiselect("Canton", cantons), and st.slider for the max travel time in hours
+    #         (disabled while no city / village is entered).
+    # Step 2: Add an st.expander "Use school holidays of a canton" with a selectbox of holiday_cantons
+    #         and one button per holiday period. The button sets the date input through
+    #         st.session_state (use the button's on_click callback).
+    # Step 3: Add st.date_input("Holiday dates", key="holiday_range") for a date range.
+    # Step 4: Check the dates with filters.validate_holiday_range and show st.sidebar.warning if needed.
+    # Hint:   Give every widget a key=..., so its value survives reruns and can be set from callbacks.
+    # Hint:   All filters are optional. With nothing filled in, return place="", cantons=[], dates=None.
+    # Done when: the sidebar looks like the prototype and the returned dict changes when you use it.
+    raise NotImplementedError("TODO [NOAH+JAN | Task 10]: sidebar_filters")
+
+
+# ============================================================================ map
+def build_map(resorts: pd.DataFrame, chances: dict[str, float] | None) -> folium.Map:
+    """
+    The map of Switzerland with one circle per resort.
+
+    Owner:    Noah (Task 11: map, charts and resort details)
+    Used by:  pages/explore.py
+    Source:   data_access.get_resorts() (after the filters), chances from get_ranked_resorts()
+    Returns:  a folium.Map
+    """
+    # TODO [NOAH | Task 11] Build the map
+    # Step 1: folium.Map(location=config.MAP_CENTER, zoom_start=config.MAP_ZOOM, tiles=None).
+    # Step 2: Add the swisstopo tiles: folium.TileLayer(tiles=config.SWISSTOPO_TILES,
+    #         attr=config.SWISSTOPO_ATTRIBUTION). Add a fallback layer and folium.LayerControl.
+    # Step 3: One folium.CircleMarker per resort, tooltip=resort name, radius growing with total_piste_km.
+    # Step 4: Color: config.GREY without station, config.ACCENT_BLUE by default,
+    #         traffic light colors (config.GREEN / AMBER / RED) when chances is given.
+    # Hint:   Put the color rule in a small helper chance_color(chance) using config.GOOD_CHANCE_MIN
+    #         and config.OK_CHANCE_MIN. You need it again for the chance bar.
+    # Hint:   Add config.OSM_ATTRIBUTION once the resorts come from OpenStreetMap.
+    # Done when: all resorts appear as dots of different sizes, grey ones where there is no station.
+    raise NotImplementedError("TODO [NOAH | Task 11]: build_map")
 
 
 def show_map(fmap: folium.Map, key: str) -> str | None:
-    """Render the map and return the name of the clicked resort (or None).
-
-    We only ask for the last clicked tooltip, so panning and zooming do not rerun the app.
     """
-    out = st_folium(fmap, height=520, use_container_width=True, key=key,
-                    returned_objects=["last_object_clicked_tooltip"])
-    clicked = (out or {}).get("last_object_clicked_tooltip")
-    return clicked.strip() if clicked else None
+    Draw the map and return the name of the resort the user clicked (or None).
+
+    Owner:    Noah (Task 11: map, charts and resort details)
+    Used by:  pages/explore.py
+    Source:   the map from build_map()
+    Returns:  the clicked resort's name (the tooltip text), or None
+    """
+    # TODO [NOAH | Task 11] Show the map and read clicks
+    # Step 1: out = st_folium(fmap, height=520, use_container_width=True, key=key,
+    #         returned_objects=["last_object_clicked_tooltip"]).
+    #         returned_objects limits reruns to clicks, so panning and zooming stay smooth.
+    # Step 2: Return out["last_object_clicked_tooltip"] (strip spaces), or None.
+    # Hint:   st_folium keeps returning the LAST click on every rerun. In the page, remember the last
+    #         click you handled in st.session_state and only react to a NEW one (see the prototype).
+    # Done when: clicking a dot sets st.session_state["selected_resort_id"] and shows the resort card.
+    raise NotImplementedError("TODO [NOAH | Task 11]: show_map")
 
 
 def map_legend(with_chances: bool) -> None:
-    """Small legend below the map."""
-    def dot(color: str, text: str) -> str:
-        return (f"<span style='display:inline-block;width:12px;height:12px;border-radius:50%;"
-                f"background:{color};margin-right:6px;vertical-align:middle'></span>{text}"
-                f"<span style='margin-right:16px'></span>")
-
-    if with_chances:
-        html = (dot(config.GREEN, "Good odds") + dot(config.AMBER, "Mixed odds")
-                + dot(config.RED, "Poor odds") + dot(config.GREY, "No station nearby"))
-    else:
-        html = dot(config.ACCENT_BLUE, "Resort with snow data") + dot(config.GREY, "No station nearby")
-    st.markdown(html + "<br><small>Circle size = total piste km</small>", unsafe_allow_html=True)
-
-
-# ------------------------------------------------------------------ resort panel
-def piste_bar(pistes: pd.DataFrame) -> go.Figure:
-    """Horizontal stacked bar of piste km by difficulty."""
-    fig = go.Figure()
-    for _, row in pistes.iterrows():
-        fig.add_bar(y=["Pistes"], x=[row["km"]], name=row["difficulty"], orientation="h",
-                    marker_color=config.PISTE_COLORS[row["difficulty"]],
-                    text=[f"{row['km']:.0f} km"], textposition="inside",
-                    textfont=dict(color="white"))
-    fig = _style(fig, height=150)
-    fig.update_layout(barmode="stack", yaxis=dict(visible=False), xaxis=dict(visible=False),
-                      title="Piste km by difficulty", margin=dict(t=40, b=0),
-                      legend=dict(orientation="h", y=-0.15, traceorder="normal"))
-    return fig
-
-
-def station_box(station: dict | None) -> None:
-    """Which station the snow data comes from, or a warning if there is none."""
-    if station:
-        st.info(f"Snow data from station **{station['name']}** "
-                f"({station['altitude_m']:,} m, {station['distance_km']:g} km away)")
-    else:
-        st.warning("No reliable measurement station nearby. A snow forecast is not available for this resort.")
-
-
-# --------------------------------------------------------------------- snow check
-def chance_bar(chance: float, baseline: float, verdict: str) -> None:
-    """One card with the chance as a 0 to 100% bar and the historical average as a marker.
-
-    Plain HTML instead of a chart: it is just one bar, and this way it scales nicely on phones.
     """
-    color = config.chance_color(chance)
-    pct, base_pct = round(chance * 100), round(baseline * 100)
-    st.markdown(
-        f"""
-        <div style="border:1px solid {config.ICE_BLUE};border-radius:12px;padding:20px 24px;margin:8px 0 16px">
-          <div style="font-size:2rem;font-weight:700;color:{color}">{pct}%
-            <span style="font-size:1.2rem;font-weight:600;color:{config.TEXT_DARK}">chance of a good ski week</span>
-          </div>
-          <div style="position:relative;height:28px;background:#EEF2F6;border-radius:14px;margin:18px 0 6px">
-            <div style="width:{pct}%;height:100%;background:{color};border-radius:14px"></div>
-            <div title="Historical average" style="position:absolute;left:{base_pct}%;top:-6px;bottom:-6px;
-                 width:3px;background:{config.BRAND_BLUE};transform:translateX(-50%)"></div>
-          </div>
-          <div style="position:relative;height:20px;font-size:0.8rem;color:#5B6675">
-            <span style="position:absolute;left:0">0%</span>
-            <span style="position:absolute;left:50%;transform:translateX(-50%)">50%</span>
-            <span style="position:absolute;right:0">100%</span>
-          </div>
-          <div style="margin-top:10px">
-            <span style="display:inline-block;width:3px;height:14px;background:{config.BRAND_BLUE};
-                  vertical-align:middle;margin-right:6px"></span>
-            Historical average for this week: <b>{base_pct}%</b>
-          </div>
-          <div style="margin-top:6px">{verdict}</div>
-          <div style="margin-top:10px;font-size:0.85rem;color:#5B6675">
-            A good ski week means at least {config.GOOD_SNOW_CM} cm of snow depth on all
-            {config.GOOD_WEEK_DAYS} days at the linked station.
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    Small legend below the map (colors and "circle size = piste km").
+
+    Owner:    Noah (Task 11: map, charts and resort details)
+    Used by:  pages/explore.py
+    Returns:  nothing
+    """
+    # TODO [NOAH | Task 11] Map legend
+    # Step 1: Without chances: blue = resort with snow data, grey = no station nearby.
+    # Step 2: With chances: green / amber / red for the odds, grey = no station.
+    # Hint:   st.markdown with small colored dots in HTML (unsafe_allow_html=True) is enough.
+    # Done when: the legend matches the colors on the map.
+    raise NotImplementedError("TODO [NOAH | Task 11]: map_legend")
+
+
+def ranked_list(ranked: pd.DataFrame) -> None:
+    """
+    The ranked list of resorts below the map (only when holiday dates are set).
+
+    Owner:    Noah + Jan (Task 10 and Task 9)
+    Used by:  pages/explore.py
+    Source:   data_access.get_ranked_resorts()
+    Returns:  nothing (a "Select" button per row sets st.session_state["selected_resort_id"])
+    """
+    # TODO [NOAH+JAN | Task 10] Ranked resort list
+    # Step 1: st.subheader("Best resorts for your dates").
+    # Step 2: For the top 10 rows: st.columns with name, canton, chance (colored), travel time,
+    #         and st.button("Select", key=f"rank_{resort_id}", on_click=..., args=(resort_id,)).
+    # Hint:   Every button needs its own key, otherwise Streamlit raises a duplicate key error.
+    # Done when: clicking "Select" opens that resort's card.
+    raise NotImplementedError("TODO [NOAH+JAN | Task 10]: ranked_list")
+
+
+# ============================================================================ resort card
+def resort_card(details: dict, pistes: pd.DataFrame, station: dict | None,
+                travel_minutes: int | None) -> bool:
+    """
+    The resort details below the map: name, description, key numbers, pistes, station, button.
+
+    Owner:    Noah (Task 11: map, charts and resort details)
+    Used by:  pages/explore.py
+    Source:   data_access.get_resort_details(), get_pistes(), get_linked_station(), get_travel_time_minutes()
+    Returns:  True if the user clicked "Check the snow for your holiday", otherwise False
+    """
+    # TODO [NOAH | Task 11] Resort card
+    # Step 1: In st.container(border=True): st.subheader with name and canton, a "Close" button,
+    #         and the description.
+    # Step 2: st.metric for piste km, lifts, base altitude and summit altitude (2 columns x 2 rows,
+    #         otherwise the numbers get cut off).
+    # Step 3: The piste km by difficulty as a horizontal stacked plotly bar (config.PISTE_COLORS).
+    # Step 4: Station box: st.info "Snow data from station X (1,594 m, 3 km away)", or st.warning
+    #         "No reliable measurement station nearby. A snow forecast is not available for this resort."
+    # Step 5: Travel time if known, then st.button("Check the snow for your holiday", type="primary",
+    #         disabled=station is None).
+    # Done when: it looks like the prototype's resort card for every resort.
+    raise NotImplementedError("TODO [NOAH | Task 11]: resort_card")
+
+
+# ============================================================================ snow check
+def snow_check_dates(default: tuple[date, date]) -> tuple[date, date] | None:
+    """
+    The (slightly larger) date input at the top of the snow check.
+
+    Owner:    Noah (Task 10: user interface and navigation)
+    Used by:  pages/explore.py
+    Source:   pre-filled from the sidebar dates, or filters.default_trip_dates()
+    Returns:  (start, end) if two valid dates are picked, otherwise None (with a friendly message)
+    """
+    # TODO [NOAH | Task 10] Snow check date input
+    # Step 1: st.date_input("Holiday dates", key="check_range"), pre-filled with `default`.
+    # Step 2: Make it a bit larger with a small CSS rule on .st-key-check_range (see the prototype).
+    # Step 3: Only one date picked -> st.info("Please pick an end date too.") and return None.
+    # Step 4: Check with filters.validate_holiday_range; show st.warning and return None if invalid.
+    # Done when: dates in July show "Snow-Proof covers the ski season from December to April".
+    raise NotImplementedError("TODO [NOAH | Task 10]: snow_check_dates")
+
+
+def chance_bar(chance: float, baseline: float) -> None:
+    """
+    The main result: one bar from 0 to 100% with the chance, and the historical average as a marker.
+
+    Owner:    Noah (Task 11: map, charts and resort details)
+    Used by:  pages/explore.py
+    Source:   data_access.predict_good_week() -> chance and baseline
+    Returns:  nothing
+    """
+    # TODO [NOAH | Task 11] Chance bar with baseline
+    # Step 1: Big text "68% chance of a good ski week" in the traffic light color.
+    # Step 2: A bar from 0 to 100% filled up to the chance, with a thin marker at the baseline,
+    #         and the text "Historical average for this week: 61%".
+    # Step 3: One sentence of explanation, and the definition "A good ski week means at least
+    #         50 cm of snow depth on all 7 days at the linked station" (use config.GOOD_SNOW_CM).
+    # Hint:   The prototype draws this with a little HTML in st.markdown. A plotly bar works too.
+    # Done when: chance and historical average are shown together, without repeating the numbers elsewhere.
+    raise NotImplementedError("TODO [NOAH | Task 11]: chance_bar")
 
 
 def weekly_chart(weekly: pd.DataFrame) -> go.Figure:
-    """Chance per week of the stay, with the historical average as markers."""
-    fig = go.Figure()
-    fig.add_bar(x=weekly["label"], y=weekly["chance"] * 100, name="Model",
-                marker_color=[config.chance_color(c) for c in weekly["chance"]],
-                text=[f"{c:.0%}" for c in weekly["chance"]], textposition="outside")
-    fig.add_scatter(x=weekly["label"], y=weekly["baseline"] * 100, name="Historical average",
-                    mode="markers", marker=dict(symbol="diamond", size=11, color=config.BRAND_BLUE))
-    fig.update_layout(title="Chance of a good week", yaxis=dict(title="%", range=[0, 110]))
-    return _style(fig)
+    """
+    Chance per week when the stay covers several weeks.
+
+    Owner:    Noah (Task 11: map, charts and resort details)
+    Used by:  pages/explore.py
+    Source:   predict_good_week()["weekly"] (columns label, chance, baseline)
+    Returns:  a plotly Figure
+    """
+    # TODO [NOAH | Task 11] Weekly chart
+    # Step 1: go.Figure with a bar per week (chance in %), colored with the traffic light colors.
+    # Step 2: Add the baseline per week as markers (fig.add_scatter with mode="markers").
+    # Done when: a 3-week stay shows 3 bars.
+    raise NotImplementedError("TODO [NOAH | Task 11]: weekly_chart")
 
 
 def daily_snow_chart(daily: pd.DataFrame) -> go.Figure:
-    """Expected snow depth per day with an uncertainty band and the 50 cm line."""
-    fig = go.Figure()
-    fig.add_scatter(x=daily["date"], y=daily["high_cm"], mode="lines", line=dict(width=0),
-                    showlegend=False, hoverinfo="skip")
-    fig.add_scatter(x=daily["date"], y=daily["low_cm"], mode="lines", line=dict(width=0),
-                    fill="tonexty", fillcolor="rgba(46,134,193,0.25)", name="Likely range (80%)")
-    fig.add_scatter(x=daily["date"], y=daily["expected_cm"], mode="lines+markers",
-                    line=dict(color=config.BRAND_BLUE, width=3), name="Expected snow depth")
-    fig.add_hline(y=config.GOOD_SNOW_CM, line_dash="dash", line_color=config.RED,
-                  annotation_text=f"{config.GOOD_SNOW_CM} cm threshold", annotation_position="top left")
-    fig.update_layout(title="Expected snow depth per day", yaxis_title="cm")
-    return _style(fig)
+    """
+    Expected snow depth per day of the stay, with an uncertainty band and a dashed 50 cm line.
+
+    Owner:    Noah (Task 11: map, charts and resort details)
+    Used by:  pages/explore.py
+    Source:   predict_good_week()["daily"] (columns date, expected_cm, low_cm, high_cm)
+    Returns:  a plotly Figure
+    """
+    # TODO [NOAH | Task 11] Snow depth chart
+    # Step 1: Draw high_cm and low_cm as two invisible lines and fill between them (fill="tonexty").
+    # Step 2: Draw expected_cm as a line with markers.
+    # Step 3: fig.add_hline(y=config.GOOD_SNOW_CM, line_dash="dash") with the label "50 cm threshold".
+    # Done when: the chart looks like the prototype's "Expected snow depth per day".
+    raise NotImplementedError("TODO [NOAH | Task 11]: daily_snow_chart")
 
 
-# ------------------------------------------------------------------- model page
+def history_chart(history: pd.DataFrame, calendar_week: int) -> go.Figure:
+    """
+    OPTIONAL: share of good weeks per decade for this calendar week (long-term trend).
+
+    Owner:    Noah (Task 11, optional)
+    Used by:  pages/explore.py (optional section)
+    Source:   data_access.get_historical_good_week_share() (columns decade, share)
+    Returns:  a plotly Figure
+    """
+    # TODO [NOAH | Task 11, optional] Decade chart
+    # Step 1: go.Bar with x=decade and y=share in %.
+    # Hint:   Removed from the prototype after feedback. Only build it if the team wants it back.
+    # Done when: one bar per decade.
+    raise NotImplementedError("TODO [NOAH | Task 11, optional]: history_chart")
+
+
+def model_info_box(info: dict) -> None:
+    """
+    The "About this forecast" expander at the bottom of the snow check.
+
+    Owner:    Noah (Task 10: user interface and navigation)
+    Used by:  pages/explore.py
+    Source:   data_access.get_model_info()
+    Returns:  nothing
+    """
+    # TODO [NOAH | Task 10] Model info box
+    # Step 1: st.expander("About this forecast") with station, training period and final test scores.
+    # Step 2: Add the disclaimer: a station is not the whole resort, slopes can differ,
+    #         this is a probability, not a promise.
+    # Done when: it matches the prototype's box.
+    raise NotImplementedError("TODO [NOAH | Task 10]: model_info_box")
+
+
+# ============================================================================ model page
 def walk_forward_timeline(results: pd.DataFrame) -> go.Figure:
-    """Training (dark) and test (light) periods of each validation round."""
-    fig = go.Figure()
-    for i, (_, r) in enumerate(results.iterrows()):
-        t0, t1 = (int(x) for x in r["train_period"].split("-"))
-        s0, s1 = (int(x) for x in r["test_period"].split("-"))
-        fig.add_bar(y=[r["round"]], x=[t1 - t0 + 1], base=[t0], orientation="h",
-                    marker_color=config.BRAND_BLUE, name="Train", legendgroup="train",
-                    showlegend=(i == 0))
-        fig.add_bar(y=[r["round"]], x=[s1 - s0 + 1], base=[s0], orientation="h",
-                    marker_color=config.AMBER, name="Test", legendgroup="test", showlegend=(i == 0))
-    fig.update_layout(barmode="overlay", yaxis=dict(autorange="reversed"),
-                      xaxis=dict(range=[1950, 2026], title="Year"), title="Walk-forward validation")
-    return _style(fig, height=300)
+    """
+    Training and test periods of each validation round as horizontal bars on a year axis.
+
+    Owner:    Noah + Julian (Task 11 and Task 7)
+    Used by:  pages/model.py
+    Source:   data_access.get_validation_results() (columns round, train_period, test_period)
+    Returns:  a plotly Figure
+    """
+    # TODO [NOAH+JULIAN | Task 11] Walk-forward timeline
+    # Step 1: For each round, split "1950-1969" into start and end year.
+    # Step 2: Add one horizontal bar for training and one for testing (orientation="h", base=start year).
+    # Hint:   barmode="overlay" and yaxis autorange="reversed" put Round 1 on top.
+    # Done when: the timeline matches the rounds in ml/evaluate.py.
+    raise NotImplementedError("TODO [NOAH+JULIAN | Task 11]: walk_forward_timeline")
 
 
 def model_vs_baseline_chart(results: pd.DataFrame, model_col: str, baseline_col: str, title: str) -> go.Figure:
-    """Grouped bars: model versus simple historical baseline, per round."""
-    fig = go.Figure()
-    fig.add_bar(x=results["round"], y=results[model_col], name="Model", marker_color=config.BRAND_BLUE)
-    fig.add_bar(x=results["round"], y=results[baseline_col], name="Historical baseline",
-                marker_color=config.GREY)
-    fig.update_layout(barmode="group", title=title)
-    return _style(fig)
+    """
+    Grouped bars: our model versus the historical baseline, per round.
+
+    Owner:    Noah (Task 11: map, charts and resort details)
+    Used by:  pages/model.py
+    Source:   data_access.get_validation_results()
+    Returns:  a plotly Figure
+    """
+    # TODO [NOAH | Task 11] Model versus baseline chart
+    # Step 1: Two go.Bar traces (model and baseline) with x=round, barmode="group".
+    # Hint:   Call it twice: once for accuracy (higher is better), once for Brier (lower is better).
+    # Done when: both charts show 5 rounds with two bars each.
+    raise NotImplementedError("TODO [NOAH | Task 11]: model_vs_baseline_chart")
