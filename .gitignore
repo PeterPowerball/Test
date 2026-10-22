@@ -3,3 +3,10 @@ __pycache__/
 .venv/
 .pytest_cache/
 .DS_Store
+
+# Downloads, the SQLite database and trained models are created by the scripts.
+# They are too big for git. Only the empty folders are kept (.gitkeep).
+data/*
+!data/.gitkeep
+models/*
+!models/.gitkeep

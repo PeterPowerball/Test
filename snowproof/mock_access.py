@@ -1,19 +1,36 @@
-"""The ONLY place where the UI gets its data from.
+"""
+mock_access.py: the mock versions of every data_access.py function (from the prototype).
 
-Today every function returns mock data (see mock_data.py). Later, each function can be
-replaced one by one with a real source, without touching any page. The docstring of
-each function says what it returns and which real source will replace the mock.
+Owner:       nobody needs to change this file. It is the prototype's data layer, kept as is.
+Depends on:  mock_data.py, config.py
+Used by:     data_access.py, but only while config.USE_MOCK_DATA is True
+Flow:        not part of the real pipeline. Delete it at the very end, once the real data works.
 
-Rule for teammates: keep the return format (column names, units) the same when you
-swap in the real source, and the UI keeps working.
+Why keep it? Noah can build every page on these fake numbers while Nico and Julian
+build the real data and model. The column names here are the contract for the real versions.
 """
 
 from datetime import date
 
 import pandas as pd
-import streamlit as st
+
+from datetime import timedelta
 
 from snowproof import config, mock_data
+
+
+def _validate_holiday_range(start: date, end: date) -> str | None:
+    """Mock copy of the date check (the real one is filters.validate_holiday_range)."""
+    if end < start:
+        return "The end date is before the start date."
+    if (end - start).days + 1 > config.MAX_STAY_DAYS:
+        return f"Please pick at most {config.MAX_STAY_DAYS} days."
+    day = start
+    while day <= end:
+        if day.month not in config.SEASON_MONTHS:
+            return "Snow-Proof covers the ski season from December to April. Please pick dates in that period."
+        day += timedelta(days=1)
+    return None
 
 
 def _resort_row(resort_id: str) -> pd.Series:
@@ -25,7 +42,6 @@ def _resort_row(resort_id: str) -> pd.Series:
     return match.iloc[0]
 
 
-@st.cache_data
 def get_resorts() -> pd.DataFrame:
     """All ski resorts, one row each.
 
@@ -39,7 +55,6 @@ def get_resorts() -> pd.DataFrame:
     return mock_data.resorts_table()
 
 
-@st.cache_data
 def get_cantons() -> list[str]:
     """Cantons that have at least one resort (for the filter), sorted.
 
@@ -48,7 +63,6 @@ def get_cantons() -> list[str]:
     return sorted(get_resorts()["canton"].unique().tolist())
 
 
-@st.cache_data
 def get_school_holiday_cantons() -> list[str]:
     """All 26 canton codes, for the school holiday helper.
 
@@ -57,7 +71,6 @@ def get_school_holiday_cantons() -> list[str]:
     return mock_data.cantons()
 
 
-@st.cache_data
 def get_resort_details(resort_id: str) -> dict:
     """All facts about one resort as a dict (same keys as the get_resorts() columns).
 
@@ -66,7 +79,6 @@ def get_resort_details(resort_id: str) -> dict:
     return _resort_row(resort_id).to_dict()
 
 
-@st.cache_data
 def get_pistes(resort_id: str) -> pd.DataFrame:
     """Piste length by difficulty.
 
@@ -81,7 +93,6 @@ def get_pistes(resort_id: str) -> pd.DataFrame:
     })
 
 
-@st.cache_data
 def get_linked_station(resort_id: str) -> dict | None:
     """The measurement station used for the snow data, or None if there is no reliable one.
 
@@ -97,7 +108,6 @@ def get_linked_station(resort_id: str) -> dict | None:
             "distance_km": float(row["station_distance_km"])}
 
 
-@st.cache_data
 def get_travel_time_minutes(home_address: str, resort_id: str) -> int | None:
     """Travel time by public transport in minutes, or None if the address is unknown or empty.
 
@@ -110,7 +120,6 @@ def get_travel_time_minutes(home_address: str, resort_id: str) -> int | None:
     return mock_data.travel_minutes(home_address, row["lat"], row["lon"])
 
 
-@st.cache_data
 def get_school_holidays(canton: str) -> list[tuple[date, date]]:
     """School holiday periods of a canton as (start, end) pairs, for the coming winter.
 
@@ -119,7 +128,6 @@ def get_school_holidays(canton: str) -> list[tuple[date, date]]:
     return mock_data.school_holidays(canton)
 
 
-@st.cache_data
 def predict_good_week(resort_id: str, start_date: date, end_date: date) -> dict:
     """Chance of a good ski week for a stay.
 
@@ -137,7 +145,7 @@ def predict_good_week(resort_id: str, start_date: date, end_date: date) -> dict:
     row = _resort_row(resort_id)
     if not row["has_station"]:
         return {"available": False, "reason": "No reliable measurement station nearby."}
-    problem = config.validate_holiday_range(start_date, end_date)
+    problem = _validate_holiday_range(start_date, end_date)
     if problem:
         return {"available": False, "reason": problem}
 
@@ -165,7 +173,6 @@ def predict_good_week(resort_id: str, start_date: date, end_date: date) -> dict:
     }
 
 
-@st.cache_data
 def get_historical_good_week_share(resort_id: str, calendar_week: int) -> pd.DataFrame:
     """Share of good weeks for one ISO calendar week, per decade.
 
@@ -181,7 +188,6 @@ def get_historical_good_week_share(resort_id: str, calendar_week: int) -> pd.Dat
     })
 
 
-@st.cache_data
 def get_validation_results() -> pd.DataFrame:
     """Walk-forward validation results of the model versus the simple historical baseline.
 
@@ -194,7 +200,6 @@ def get_validation_results() -> pd.DataFrame:
     return mock_data.validation_table()
 
 
-@st.cache_data
 def get_model_info(resort_id: str) -> dict:
     """Short facts for the model info box of one resort.
 
@@ -213,7 +218,6 @@ def get_model_info(resort_id: str) -> dict:
     }
 
 
-@st.cache_data
 def get_ranked_resorts(resort_ids: tuple[str, ...], start_date: date, end_date: date,
                        home_address: str = "") -> pd.DataFrame:
     """Resorts ranked by chance of a good week (best first). Resorts without a station are left out.
