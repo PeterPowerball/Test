@@ -55,13 +55,7 @@ streamlit run streamlit_app.py
 - Tests: `pip install pytest`, then `pytest`. A 🚧 box is fine, a red error is not.
 - Data and model: `python pipeline.py` runs all 5 steps, `python pipeline.py 3` runs only step 3.
 
-## Deploy on Streamlit Community Cloud
 
-1. Go to [share.streamlit.io](https://share.streamlit.io) and sign in with GitHub.
-2. Click **Create app**, choose this repository, the branch (`main`) and `streamlit_app.py` as the main file.
-3. Click **Deploy**. Every push to that branch redeploys the app.
-
-Private repositories work too, once Streamlit is authorized for them in your GitHub settings.
 
 ## Find your tasks
 
