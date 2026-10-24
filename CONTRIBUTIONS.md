@@ -8,11 +8,11 @@ Fill this in during the project, not at the end. One row per piece of work. Link
 
 ## Summary per person
 
-| Person | Tasks | Main files | Short description of the contribution |
+| Person | Tasks | Where | Short description of the contribution |
 |---|---|---|---|
-| Fabio | 1, 2, 12, 13 | `streamlit_app.py`, `config.py`, `data_access.py`, `tests/test_app_smoke.py` | |
-| Nico | 3, 4, 5 | `data.py`, `pipeline.py` steps 1 to 3 | |
-| Julian | 6, 7 | `model.py`, `pipeline.py` steps 4 and 5 | |
-| Jan | 8, 9 | `location.py` | |
-| Noah | 10, 11 | `ui.py`, `pages/` | |
+| Fabio | 1, 2, 12, 13 | `streamlit_app.py` sections 0 and 6 | |
+| Nico | 3, 4, 5 | `streamlit_app.py` sections 1 and 2 | |
+| Julian | 6, 7 | `streamlit_app.py` sections 2 and 3 | |
+| Jan | 8, 9 | `streamlit_app.py` section 4 | |
+| Noah | 10, 11 | `streamlit_app.py` section 5 | |
 | Everyone | video, documentation, GenAI reflection | `README.md`, `CONTRIBUTIONS.md`, `GENAI_LOG.md` | |

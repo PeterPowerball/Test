@@ -5,8 +5,8 @@ This is part of our grade (requirement 7) and of the video.
 
 ## Starting point
 
-We used Claude Code to generate the starting structure of the project: the folders and files, function names,
-docstrings and TODO lists, the documentation templates, and a clickable UI prototype with mock data (branch
+We used Claude Code to generate the starting structure of the project: the sections of `streamlit_app.py`, the
+function names, docstrings and TODO placeholders, the documentation templates, and a clickable UI prototype with mock data (branch
 `ui-prototype`) as a visual reference. All logic behind the TODOs is written by us.
 
 ## Log
@@ -14,6 +14,7 @@ docstrings and TODO lists, the documentation templates, and a clickable UI proto
 | Date | Person | Tool | What we asked | What we used | What we changed ourselves |
 |---|---|---|---|---|---|
 | 22.10.2026 | Team | Claude Code | Project structure and UI prototype | structure, TODOs, docs templates, prototype as reference | |
+| 24.10.2026 | Team | Claude Code | Simplify the structure to one file with placeholders only | one-file skeleton (branch `skeleton-one-page`) | |
 | | | | | | |
 
 ## Reflection (for the video)
