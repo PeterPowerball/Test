@@ -13,8 +13,7 @@ function names, docstrings and TODO placeholders, the documentation templates, a
 
 | Date | Person | Tool | What we asked | What we used | What we changed ourselves |
 |---|---|---|---|---|---|
-| 22.10.2026 | Team | Claude Code | Project structure and UI prototype | structure, TODOs, docs templates, prototype as reference | |
-| 24.10.2026 | Team | Claude Code | Simplify the structure to one file with placeholders only | one-file skeleton (branch `skeleton-one-page`) | |
+| 22.10. to 24.10.2026 | Team | Claude Code | Project structure, UI prototype, then simplified to one file with placeholders only | one-file skeleton (branch `skeleton-one-page`), docs templates, prototype as visual reference | |
 | | | | | | |
 
 ## Reflection (for the video)
