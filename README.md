@@ -6,9 +6,6 @@ facts, then check the chance of a **good ski week** for your holiday dates: at l
 measured snow depth (MeteoSwiss) and historical weather (Open-Meteo), and it is always compared with the simple
 historical average.
 
-Group project at the University of St. Gallen (HSG), course "Fundamentals and Methods of Computer Science for Business
-Studies".
-
 **Status: code skeleton.** Every function exists with its inputs, outputs and a TODO. The app already runs: sections that
 are not built yet show a 🚧 box, and the UI uses mock data until the real pipeline works. The finished look is on the
 `ui-prototype` branch.
