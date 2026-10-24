@@ -15,7 +15,7 @@ How this file is organised (top to bottom, in the order the app needs it):
   Section 2  Good-week labels                 Nico + Julian
   Section 3  The machine learning model       Julian (+ Jan)
   Section 4  Location, travel, filters        Jan
-  Section 5  What the user sees               Noah (+ Jan, Julian)
+  Section 5  What the user sees               Noah (+ Jan); the two About tabs: Fabio
   Section 6  The page: putting it together    Fabio
 
 Find your work: search this file for "TODO [YOURNAME" (for example "TODO [NICO").
@@ -263,7 +263,7 @@ def rank_resorts(resorts, chances):
 
 
 # =============================================================================
-# SECTION 5: WHAT THE USER SEES (Noah, Task 10 and 11)
+# SECTION 5: WHAT THE USER SEES (Noah, Task 10 and 11; the two About tabs: Fabio)
 # Website part: everything on the screen. Look at the ui-prototype branch for the look.
 # =============================================================================
 
@@ -329,8 +329,8 @@ def show_about_model(results):
     Website:  The "About our model" tab: data sources, what a good week is, inputs, results chart.
     Returns:  nothing
     """
-    # TODO [NOAH+JULIAN | Task 11]
-    # Hint:      Short texts and one chart: model versus historical average per round.
+    # TODO [FABIO+JULIAN | Task 10]
+    # Hint:      Julian tells you what to explain. Short texts and one chart: model versus historical average per round.
     # Done when: someone outside the course understands what we predict and how well.
     pass
 
@@ -341,7 +341,7 @@ def show_about_us():
     Website:  The "About us" tab.
     Returns:  nothing
     """
-    # TODO [NOAH | Task 10]
+    # TODO [FABIO | Task 10]
     # Hint:      A few sentences and one line per team member.
     # Done when: everyone checked their own line.
     pass

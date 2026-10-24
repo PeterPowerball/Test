@@ -29,7 +29,8 @@ GENAI_LOG.md         how we used AI tools
 | 2 Good-week labels | Nico + Julian | nothing visible, the "answer" the model learns from |
 | 3 Machine learning model | Julian (+ Jan) | the chance in the snow check, the "About our model" tab |
 | 4 Location, travel, filters | Jan | sidebar filters, travel time, ranked list |
-| 5 What the user sees | Noah (+ Jan, Julian) | map, resort card, snow check, both "About" tabs |
+| 5 What the user sees | Noah (+ Jan) | sidebar, map, resort card, snow check |
+| 5 the two "About" tabs | Fabio (+ Julian) | "About our model" and "About us" tabs |
 | 6 Putting it together | Fabio | the order of everything on the page |
 
 ## Run it on your computer
@@ -59,7 +60,7 @@ Replace `pass` with your code when you start. The task numbers come from our Con
 
 | Person | Tasks |
 |---|---|
-| Fabio | 1 Project management, 2 Technical foundation, 12 Integration and testing, 13 Final review |
+| Fabio | 1 Project management, 2 Technical foundation, 12 Integration and testing, 13 Final review, plus the two "About" tabs (from task 10) |
 | Nico | 3 Snow and weather data, 4 Data preparation, 5 Ski resort information |
 | Julian | 6 Model training, 7 Model evaluation and prediction |
 | Jan | 8 Location, travel and holiday filters, 9 Resort ranking |
